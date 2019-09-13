@@ -8,8 +8,10 @@
 
 # Example:
 # ./tools/generate_bing_tsv.py --gpu 0 --cfg experiments/cfgs/faster_rcnn_end2end_resnet.yml --def models/vg/ResNet-101/faster_rcnn_end2end_final/test.prototxt --out output_bing_test_100k.tsv --net data/faster_rcnn_models/resnet101_faster_rcnn_final_iter_320000.caffemodel --split bing_img --input /data/users/kragga/visual_qna/agiPT/agiPT/projects/visual_qna/lxmert/data/bing/test_split_40M_0_00_100k.tsv --lines 100000
-
-
+import caffe
+import sys
+# To remove the _cafe not found error
+sys.path.insert(0,'/opt/caffe/python/caffe')
 import _init_paths
 from fast_rcnn.config import cfg, cfg_from_file
 from fast_rcnn.test import im_detect, _get_blobs, vis_detections, vis_multiple, vis_relations
@@ -17,7 +19,7 @@ from fast_rcnn.nms_wrapper import nms
 from utils.timer import Timer
 import io
 import wand.image
-import caffe
+
 import argparse
 import pprint
 import time, os, sys
@@ -69,7 +71,7 @@ def load_image_ids(split_name):
                 filepath = os.path.join('data/visualgenome/', item['url'].split('rak248/')[-1])
                 split.append((filepath, image_id))
     elif split_name == 'bing_img':
-       with open('/data/users/kragga/visual_qna/agiPT/agiPT/projects/visual_qna/lxmert/data/bing/test_split_40M_0_00_100k.tsv') as f:
+       with open('./data/bing/test.tsv') as f:
             for item in f:
                 item_arr = item.split('\t')
                 if len(item_arr) > 13:
@@ -203,8 +205,8 @@ def get_detections_from_im_bing(net, im, image_id, conf_thresh=0.2):
 
 
 def generate_tsv_bing(gpu_id, prototxt, weights, input_file, outfile, total_num_records):
-    caffe.set_mode_gpu()
-    caffe.set_device(gpu_id)
+    caffe.set_mode_cpu()
+    # caffe.set_device(gpu_id)
     net = caffe.Net(prototxt, caffe.TEST, weights=weights)
     total = int(total_num_records)
     count = 0
@@ -217,6 +219,7 @@ def generate_tsv_bing(gpu_id, prototxt, weights, input_file, outfile, total_num_
                 if len(item_arr) > 13:
                     image_id = (item_arr[13]).rstrip()
                     im_file = (item_arr[0])
+                    
                     # First check if file exists, and if it is complete
                     # wanted_ids=set([image_id[1] for image_id in image_ids])
                     # found_ids=set()
