@@ -11,15 +11,13 @@
 import caffe
 import sys
 # To remove the _cafe not found error
-sys.path.insert(0,'/opt/caffe/python/caffe')
+# sys.path.insert(0,'/opt/caffe/python/caffe')
 import _init_paths
 from fast_rcnn.config import cfg, cfg_from_file
 from fast_rcnn.test import im_detect, _get_blobs, vis_detections, vis_multiple, vis_relations
 from fast_rcnn.nms_wrapper import nms
 from utils.timer import Timer
 import io
-import wand.image
-
 import argparse
 import pprint
 import time, os, sys
@@ -205,8 +203,8 @@ def get_detections_from_im_bing(net, im, image_id, conf_thresh=0.2):
 
 
 def generate_tsv_bing(gpu_id, prototxt, weights, input_file, outfile, total_num_records):
-    caffe.set_mode_cpu()
-    # caffe.set_device(gpu_id)
+    caffe.set_mode_gpu()
+    caffe.set_device(gpu_id)
     net = caffe.Net(prototxt, caffe.TEST, weights=weights)
     total = int(total_num_records)
     count = 0
@@ -244,7 +242,7 @@ def generate_tsv_bing(gpu_id, prototxt, weights, input_file, outfile, total_num_
                             writer.writerow(get_detections_from_im_bing(
                                 net, im, image_id))
                             _t['misc'].toc()
-                            if (count % 100) == 0:
+                            if (count % 1000) == 0:
                                 print 'GPU {:d}: {:d} {:.3f}s (projected finish: {:.2f} hours)' \
                                     .format(gpu_id, count+1, _t['misc'].average_time,
                                             _t['misc'].average_time*(total-count)/3600)
